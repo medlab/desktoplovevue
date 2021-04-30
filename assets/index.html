@@ -1,0 +1,140 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<div id="app">
+			<h1>href: {{my_href}}</h1>
+			<h2>host status: {{ host_state }}</h2>
+			<h3> counter: {{ counter }} </h3>
+			<br>
+
+			<div> 
+				<h4>binding demo region</h4>
+				<ol>
+					<li> <input type="checkbox" v-model='switch_1'> switch_1 </li>
+					<li> <input type="checkbox" v-model='switch_2'> switch_2</li>
+				</ol>
+				<ul>
+					switch_1: {{ switch_1 }} <br>
+					switch_2: {{ switch_2 }} <br>
+				</ul>
+			</div>
+			<br>
+
+			<div> 
+				<h4>full screen demo region</h4>
+				<input type="button" value="switch full screen " @click='switch_full_screen' /> 
+			</div>
+			<br>
+
+			<div> 
+				<h4>cppyy demo region</h4>
+				<p>
+					msg to test cppyy:<input type='text' v-model='value_to_demo'><br>
+					<input type="button" value="call cppyy" @click='call_cppyy' />
+				</p>
+				<div style="color: red;">
+					{{ msg }}
+				</div>
+			</div>
+			<br>
+
+			<div> 
+				<h4>vue inline expression demo region</h4>
+					demo mode:{{demo_mode}} <br>
+				<input type="button" value="switch" @click=" demo_mode=!demo_mode " />	
+			</div>
+			<br>
+
+			<div> 
+				<h4>backend threading problem demo region</h4>
+				<br>
+
+				sleep msg: {{sleep_msg }} <br/>
+				<input type="button" value="sleep" @click="do_sleep" />
+			</div>
+			
+			<div> 
+				<h4>exception demo region</h4>
+				<br>
+
+				sleep msg: {{error_msg }} <br/>
+
+				<li v-for="msg in error_msg">
+					{{msg}}
+				</li>
+				<input type="button" value="trigger error" @click="do_error_demo" />
+			</div>
+
+			<br>
+
+		</div>
+
+		<script type="module" >
+			import {createApp} from './vue.esm-browser.js'
+			const Counter = {
+				data() {
+					return {
+						counter: 0,
+						switch_1: true,
+						switch_2: true,
+						msg:'',
+						value_to_demo:'',
+						my_href:'',
+						host_state:'not ready',
+						demo_mode:true,
+						sleep_msg:'alive',
+						error_msg:[],
+					}
+				},
+				mounted() {
+					setInterval(() => {
+					this.counter++
+					}, 1000)
+
+					this.my_href=self.location.href
+
+					if (! 'pywebview' in window) {
+						console.warn('try to register pywebviewreday event')
+						window.addEventListener('pywebviewready', function() {
+							this.host_state='ready'
+							this.demo_mode=false
+						})
+					}else{
+						this.host_state='ready'
+						this.demo_mode=false
+					}
+
+				},
+				methods:{
+					switch_full_screen(){
+						this.msg='prepare to trigger fullscreen'
+						pywebview.api.toggleFullscreen();
+						this.msg+=' done'
+					},
+					call_cppyy(){
+						this.msg='prepare to call cppyy dynamic class'
+						pywebview.api.cppyyDemo(this.value_to_demo);
+						this.msg+=' done'	
+					},
+					async do_sleep(){
+						this.sleep_msg='hello, prepare to sleeping'
+						let result=await pywebview.api.sleepDemo(2);
+						this.sleep_msg=`hello, sleeping done, ident=${result}`
+					},
+					async do_error_demo(){
+						try {
+							await pywebview.api.errorDemo();
+						} catch (error) {
+							console.error(error.stack)
+							this.error_msg=error.stack.split(',')
+						}	
+					}
+				}
+			}
+
+			createApp(Counter).mount('#app')
+		</script>
+	</body>
+
+</html>
