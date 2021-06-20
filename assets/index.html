@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<script src="pako_deflate.js"></script>
 	</head>
 	<body>
 		<div id="app">
@@ -66,6 +67,18 @@
 				<input type="button" value="trigger error" @click="do_error_demo" />
 			</div>
 
+			<div>
+				<h3>online graphics test</h3>
+				<textarea v-model="graphviz_data">
+
+				</textarea><br>
+				<input type="button" value="show graphviz" @click='show_graphviz' /><br>
+				<p>
+					{{ graphviz_data_result_url }}
+				</p>
+				<image v-bind:src=" graphviz_data_result_url "></image>
+				<image src="https://kroki.io/graphviz/svg/eNp9kM0KgzAQhO8-xZIHaKlX6Ulp6S-FPoDEuGhqbML6cyl594JVGyv1OMPMt8ukMiNucojg5QFUTfKRQjVVjRSbzgZQPEEFW2An0oVkQWfO0mLTx53CHalF6hsAO6kwQV4PesbIRPylOJxIiwJp_YMDOPKWD8ouQP0F6AWp5DJ1qOyqU1w9Kte6NcZgjZPrLMxJl8imH9g_8_jzecLzYSzvteLPLBgR1rNvJ7Rwmw=="></image>
+			</div>
 			<br>
 
 		</div>
@@ -85,6 +98,30 @@
 						demo_mode:true,
 						sleep_msg:'alive',
 						error_msg:[],
+						graphviz_data:`digraph D {
+  subgraph cluster_p {
+    label = "Kroki";
+    subgraph cluster_c1 {
+      label = "Server";
+      Filebeat;
+      subgraph cluster_gc_1 {
+        label = "Docker/Server";
+        Java;
+      }
+      subgraph cluster_gc_2 {
+        label = "Docker/Mermaid";
+        "Node.js";
+        "Puppeteer";
+        "Chrome";
+      }
+    }
+    subgraph cluster_c2 {
+      label = "CLI";
+      Golang;
+    }
+  }
+}`,
+						graphviz_data_result_url:''
 					}
 				},
 				mounted() {
@@ -107,6 +144,23 @@
 
 				},
 				methods:{
+					show_graphviz()
+					{
+						//var target='https://kroki.io/graphviz/svg/eNp9kM0KgzAQhO8-xZIHaKlX6Ulp6S-FPoDEuGhqbML6cyl594JVGyv1OMPMt8ukMiNucojg5QFUTfKRQjVVjRSbzgZQPEEFW2An0oVkQWfO0mLTx53CHalF6hsAO6kwQV4PesbIRPylOJxIiwJp_YMDOPKWD8ouQP0F6AWp5DJ1qOyqU1w9Kte6NcZgjZPrLMxJl8imH9g_8_jzecLzYSzvteLPLBgR1rNvJ7Rwmw=='
+						console.warn(target)
+
+
+						var diagramSource = this.graphviz_data
+
+						var data = new TextEncoder('utf-8').encode(diagramSource) 
+						var compressed = pako.deflate(data, { level: 9, to: 'string' })
+						var result = btoa(compressed)
+						.replace(/\+/g, '-').replace(/\//g, '_') 
+						var target=`https://kroki.io/graphviz/svg/${result}`
+						console.log(result)
+
+						this.graphviz_data_result_url=target;
+					},
 					switch_full_screen(){
 						this.msg='prepare to trigger fullscreen'
 						pywebview.api.toggleFullscreen();
